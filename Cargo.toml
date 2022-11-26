@@ -17,5 +17,5 @@ tokio = { version = "1.22.0", features = ["full"], optional = false } # ref. htt
 url = { version = "2.3.1", optional = false }
 
 [dev-dependencies]
-env_logger = "0.9.3"
+env_logger = "0.10.0"
 tokio-test = "0.4.2"
