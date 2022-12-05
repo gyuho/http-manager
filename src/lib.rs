@@ -66,10 +66,10 @@ pub fn create_json_post(url: &str, path: &str, d: &str) -> io::Result<Request<Bo
 pub async fn read_bytes(
     req: Request<Body>,
     timeout_dur: Duration,
-    enable_https: bool,
+    is_https: bool,
     check_status_code: bool,
 ) -> io::Result<Bytes> {
-    let resp = send_req(req, timeout_dur, enable_https).await?;
+    let resp = send_req(req, timeout_dur, is_https).await?;
     if !resp.status().is_success() {
         warn!(
             "unexpected HTTP response code {} (server error {})",
@@ -119,7 +119,7 @@ pub async fn read_bytes(
 async fn send_req(
     req: Request<Body>,
     timeout_dur: Duration,
-    enable_https: bool,
+    is_https: bool,
 ) -> io::Result<Response<Body>> {
     // ref. https://github.com/tokio-rs/tokio-tls/blob/master/examples/hyper-client.rs
     // ref. https://docs.rs/hyper/latest/hyper/client/struct.HttpConnector.html
@@ -129,7 +129,7 @@ async fn send_req(
     connector.set_connect_timeout(Some(Duration::from_secs(5)));
 
     let task = {
-        if !enable_https {
+        if !is_https {
             let cli = Client::builder().build(connector);
             cli.request(req)
         } else {
@@ -261,8 +261,13 @@ pub async fn get_non_tls(url: &str, url_path: &str) -> io::Result<Vec<u8>> {
             output.stdout
         } else {
             let req = create_get(url, url_path)?;
-            let buf = match read_bytes(req, Duration::from_secs(5), url.starts_with("https"), false)
-                .await
+            let buf = match read_bytes(
+                req,
+                Duration::from_secs(15),
+                url.starts_with("https"),
+                false,
+            )
+            .await
             {
                 Ok(b) => b,
                 Err(e) => return Err(e),
@@ -291,9 +296,7 @@ pub async fn post_non_tls(url: &str, url_path: &str, data: &str) -> io::Result<V
             output.stdout
         } else {
             let req = create_json_post(url, url_path, data)?;
-            let buf = match read_bytes(req, Duration::from_secs(5), url.starts_with("https"), false)
-                .await
-            {
+            let buf = match read_bytes(req, Duration::from_secs(15), false, false).await {
                 Ok(b) => b,
                 Err(e) => return Err(e),
             };
