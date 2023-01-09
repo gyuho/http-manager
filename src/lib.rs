@@ -7,7 +7,6 @@ use std::{
 
 use hyper::{body::Bytes, client::HttpConnector, Body, Client, Method, Request, Response};
 use hyper_tls::HttpsConnector;
-use log::{debug, info, warn};
 use tokio::time::timeout;
 use url::Url;
 
@@ -39,10 +38,7 @@ const JSON_CONTENT_TYPE: &str = "application/json";
 
 /// Creates a simple HTTP POST request with JSON header and body.
 pub fn create_json_post(url: &str, path: &str, d: &str) -> io::Result<Request<Body>> {
-    let uri = match join_uri(url, path) {
-        Ok(u) => u,
-        Err(e) => return Err(e),
-    };
+    let uri = join_uri(url, path)?;
 
     let req = match Request::builder()
         .method(Method::POST)
@@ -71,7 +67,7 @@ pub async fn read_bytes(
 ) -> io::Result<Bytes> {
     let resp = send_req(req, timeout_dur, is_https).await?;
     if !resp.status().is_success() {
-        warn!(
+        log::warn!(
             "unexpected HTTP response code {} (server error {})",
             resp.status(),
             resp.status().is_server_error()
@@ -229,7 +225,7 @@ fn test_join_uri() {
 
 /// Downloads a file to the "file_path".
 pub async fn download_file(ep: &str, file_path: &str) -> io::Result<()> {
-    info!("downloading the file via {}", ep);
+    log::info!("downloading the file via {}", ep);
     let resp = reqwest::get(ep)
         .await
         .map_err(|e| Error::new(ErrorKind::Other, format!("failed reqwest::get {}", e)))?;
@@ -249,11 +245,11 @@ pub async fn download_file(ep: &str, file_path: &str) -> io::Result<()> {
 /// TODO: implement this with native Rust
 pub async fn get_non_tls(url: &str, url_path: &str) -> io::Result<Vec<u8>> {
     let joined = join_uri(url, url_path)?;
-    debug!("non-TLS HTTP get for {:?}", joined);
+    log::debug!("non-TLS HTTP get for {:?}", joined);
 
     let output = {
         if url.starts_with("https") {
-            info!("sending via curl --insecure");
+            log::info!("sending via curl --insecure");
             let mut cmd = Command::new("curl");
             cmd.arg("--insecure");
             cmd.arg(joined.as_str());
@@ -281,11 +277,11 @@ pub async fn get_non_tls(url: &str, url_path: &str) -> io::Result<Vec<u8>> {
 /// TODO: implement this with native Rust
 pub async fn post_non_tls(url: &str, url_path: &str, data: &str) -> io::Result<Vec<u8>> {
     let joined = join_uri(url, url_path)?;
-    debug!("non-TLS HTTP post {}-byte data to {:?}", data.len(), joined);
+    log::debug!("non-TLS HTTP post {}-byte data to {:?}", data.len(), joined);
 
     let output = {
         if url.starts_with("https") {
-            info!("sending via curl --insecure");
+            log::info!("sending via curl --insecure");
             let mut cmd = Command::new("curl");
             cmd.arg("--insecure");
             cmd.arg("-X POST");

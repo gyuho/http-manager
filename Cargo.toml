@@ -1,20 +1,20 @@
 [package]
 name = "http-manager"
-version = "0.0.6" # https://crates.io/crates/http-manager/versions
+version = "0.0.7" # https://crates.io/crates/http-manager/versions
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.66"
 publish = true
 description = "HTTP manager"
 homepage = "https://github.com/gyuho/http-manager"
 license = "Apache-2.0"
 
 [dependencies]
-hyper = { version = "0.14.23", features = ["full"], optional = false }
-hyper-tls = { version = "0.5.0", optional = false }
+hyper = { version = "0.14.23", features = ["full"] }
+hyper-tls = "0.5.0"
 log = "0.4.17"
-reqwest = { version = "0.11.13", optional = false }
-tokio = { version = "1.23.0", features = ["full"], optional = false } # ref. https://github.com/tokio-rs/tokio/releases
-url = { version = "2.3.1", optional = false }
+reqwest = "0.11.13"
+tokio = { version = "1.24.1", features = ["full"] } # ref. https://github.com/tokio-rs/tokio/releases
+url = "2.3.1"
 
 [dev-dependencies]
 env_logger = "0.10.0"
