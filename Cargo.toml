@@ -1,6 +1,6 @@
 [package]
 name = "http-manager"
-version = "0.0.7" # https://crates.io/crates/http-manager/versions
+version = "0.0.8" # https://crates.io/crates/http-manager/versions
 edition = "2021"
 rust-version = "1.66"
 publish = true
@@ -12,8 +12,8 @@ license = "Apache-2.0"
 hyper = { version = "0.14.23", features = ["full"] }
 hyper-tls = "0.5.0"
 log = "0.4.17"
-reqwest = "0.11.13"
-tokio = { version = "1.24.1", features = ["full"] } # ref. https://github.com/tokio-rs/tokio/releases
+reqwest = "0.11.14"
+tokio = { version = "1.24.2", features = ["full"] } # ref. https://github.com/tokio-rs/tokio/releases
 url = "2.3.1"
 
 [dev-dependencies]
