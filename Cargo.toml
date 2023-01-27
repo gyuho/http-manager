@@ -1,8 +1,8 @@
 [package]
 name = "http-manager"
-version = "0.0.8" # https://crates.io/crates/http-manager/versions
+version = "0.0.9" # https://crates.io/crates/http-manager/versions
 edition = "2021"
-rust-version = "1.66"
+rust-version = "1.67"
 publish = true
 description = "HTTP manager"
 homepage = "https://github.com/gyuho/http-manager"
