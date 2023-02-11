@@ -274,6 +274,23 @@ pub async fn get_non_tls(url: &str, url_path: &str) -> io::Result<Vec<u8>> {
     Ok(output)
 }
 
+/// RUST_LOG=debug cargo test --lib -- test_get_non_tls --exact --show-output
+#[test]
+fn test_get_non_tls() {
+    use tokio::runtime::Runtime;
+
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let rt = Runtime::new().unwrap();
+    let out = rt
+        .block_on(get_non_tls(
+            "https://api.github.com",
+            "repos/ava-labs/avalanchego/releases/latest",
+        ))
+        .unwrap();
+    println!("out: {}", String::from_utf8(out).unwrap());
+}
+
 /// TODO: implement this with native Rust
 pub async fn post_non_tls(url: &str, url_path: &str, data: &str) -> io::Result<Vec<u8>> {
     let joined = join_uri(url, url_path)?;
