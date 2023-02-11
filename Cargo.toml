@@ -1,6 +1,6 @@
 [package]
 name = "http-manager"
-version = "0.0.11" # https://crates.io/crates/http-manager/versions
+version = "0.0.12" # https://crates.io/crates/http-manager/versions
 edition = "2021"
 rust-version = "1.67"
 publish = true

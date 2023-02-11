@@ -7,6 +7,7 @@ use std::{
 
 use hyper::{body::Bytes, client::HttpConnector, Body, Client, Method, Request, Response};
 use hyper_tls::HttpsConnector;
+use reqwest::ClientBuilder;
 use tokio::time::timeout;
 use url::Url;
 
@@ -249,12 +250,31 @@ pub async fn get_non_tls(url: &str, url_path: &str) -> io::Result<Vec<u8>> {
 
     let output = {
         if url.starts_with("https") {
-            log::info!("sending via curl --insecure");
-            let mut cmd = Command::new("curl");
-            cmd.arg("--insecure");
-            cmd.arg(joined.as_str());
-            let output = cmd.output()?;
-            output.stdout
+            log::info!("sending via danger_accept_invalid_certs");
+            let cli = ClientBuilder::new()
+                .user_agent(env!("CARGO_PKG_NAME"))
+                .danger_accept_invalid_certs(true)
+                .build()
+                .map_err(|e| {
+                    Error::new(
+                        ErrorKind::Other,
+                        format!("failed ClientBuilder build {}", e),
+                    )
+                })?;
+            let resp = cli.get(joined.as_str()).send().await.map_err(|e| {
+                Error::new(ErrorKind::Other, format!("failed ClientBuilder send {}", e))
+            })?;
+            let out = resp.bytes().await.map_err(|e| {
+                Error::new(ErrorKind::Other, format!("failed ClientBuilder send {}", e))
+            })?;
+            out.into()
+
+            // log::info!("sending via curl --insecure");
+            // let mut cmd = Command::new("curl");
+            // cmd.arg("--insecure");
+            // cmd.arg(joined.as_str());
+            // let output = cmd.output()?;
+            // output.stdout
         } else {
             let req = create_get(url, url_path)?;
             let buf = match read_bytes(
