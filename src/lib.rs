@@ -1,7 +1,6 @@
 use std::{
     fs::File,
     io::{self, copy, Cursor, Error, ErrorKind},
-    process::Command,
     time::Duration,
 };
 
@@ -268,13 +267,6 @@ pub async fn get_non_tls(url: &str, url_path: &str) -> io::Result<Vec<u8>> {
                 Error::new(ErrorKind::Other, format!("failed ClientBuilder send {}", e))
             })?;
             out.into()
-
-            // log::info!("sending via curl --insecure");
-            // let mut cmd = Command::new("curl");
-            // cmd.arg("--insecure");
-            // cmd.arg(joined.as_str());
-            // let output = cmd.output()?;
-            // output.stdout
         } else {
             let req = create_get(url, url_path)?;
             let buf = match read_bytes(
@@ -311,22 +303,35 @@ fn test_get_non_tls() {
     println!("out: {}", String::from_utf8(out).unwrap());
 }
 
-/// TODO: implement this with native Rust
 pub async fn post_non_tls(url: &str, url_path: &str, data: &str) -> io::Result<Vec<u8>> {
     let joined = join_uri(url, url_path)?;
     log::debug!("non-TLS HTTP post {}-byte data to {:?}", data.len(), joined);
 
     let output = {
         if url.starts_with("https") {
-            log::info!("sending via curl --insecure");
-            let mut cmd = Command::new("curl");
-            cmd.arg("--insecure");
-            cmd.arg("-X POST");
-            cmd.arg("--header 'content-type:application/json;'");
-            cmd.arg(format!("--data '{}'", data));
-            cmd.arg(joined.as_str());
-            let output = cmd.output()?;
-            output.stdout
+            log::info!("sending via danger_accept_invalid_certs");
+            let cli = ClientBuilder::new()
+                .user_agent(env!("CARGO_PKG_NAME"))
+                .danger_accept_invalid_certs(true)
+                .build()
+                .map_err(|e| {
+                    Error::new(
+                        ErrorKind::Other,
+                        format!("failed ClientBuilder build {}", e),
+                    )
+                })?;
+            let resp = cli
+                .post(joined.as_str())
+                .body(data.to_string())
+                .send()
+                .await
+                .map_err(|e| {
+                    Error::new(ErrorKind::Other, format!("failed ClientBuilder send {}", e))
+                })?;
+            let out = resp.bytes().await.map_err(|e| {
+                Error::new(ErrorKind::Other, format!("failed ClientBuilder send {}", e))
+            })?;
+            out.into()
         } else {
             let req = create_json_post(url, url_path, data)?;
             let buf = match read_bytes(req, Duration::from_secs(15), false, false).await {
