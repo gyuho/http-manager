@@ -6,7 +6,7 @@ use std::{
 
 use hyper::{body::Bytes, client::HttpConnector, Body, Client, Method, Request, Response};
 use hyper_tls::HttpsConnector;
-use reqwest::ClientBuilder;
+use reqwest::{header::CONTENT_TYPE, ClientBuilder};
 use tokio::time::timeout;
 use url::Url;
 
@@ -253,6 +253,8 @@ pub async fn get_non_tls(url: &str, url_path: &str) -> io::Result<Vec<u8>> {
             let cli = ClientBuilder::new()
                 .user_agent(env!("CARGO_PKG_NAME"))
                 .danger_accept_invalid_certs(true)
+                .timeout(Duration::from_secs(15))
+                .connection_verbose(true)
                 .build()
                 .map_err(|e| {
                     Error::new(
@@ -303,6 +305,7 @@ fn test_get_non_tls() {
     println!("out: {}", String::from_utf8(out).unwrap());
 }
 
+/// Posts JSON body.
 pub async fn post_non_tls(url: &str, url_path: &str, data: &str) -> io::Result<Vec<u8>> {
     let joined = join_uri(url, url_path)?;
     log::debug!("non-TLS HTTP post {}-byte data to {:?}", data.len(), joined);
@@ -310,9 +313,12 @@ pub async fn post_non_tls(url: &str, url_path: &str, data: &str) -> io::Result<V
     let output = {
         if url.starts_with("https") {
             log::info!("sending via danger_accept_invalid_certs");
+
             let cli = ClientBuilder::new()
                 .user_agent(env!("CARGO_PKG_NAME"))
                 .danger_accept_invalid_certs(true)
+                .timeout(Duration::from_secs(15))
+                .connection_verbose(true)
                 .build()
                 .map_err(|e| {
                     Error::new(
@@ -322,6 +328,7 @@ pub async fn post_non_tls(url: &str, url_path: &str, data: &str) -> io::Result<V
                 })?;
             let resp = cli
                 .post(joined.as_str())
+                .header(CONTENT_TYPE, "application/json")
                 .body(data.to_string())
                 .send()
                 .await
